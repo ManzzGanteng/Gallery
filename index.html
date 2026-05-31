@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Admin Dashboard · Circle Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Syne:wght@700;800&display=swap');
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .transition-smooth {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-action {
+      transition: transform 0.15s, background 0.2s;
+    }
+    .btn-action:active {
+      transform: scale(0.96);
+    }
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          borderRadius: {
+            'DEFAULT': '5px',
+            'lg': '5px',
+            'xl': '5px',
+            '2xl': '5px',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans antialiased">
+  <nav class="bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 sticky top-0 z-20">
+    <div class="container mx-auto px-5 py-3 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="fas fa-camera-retro text-purple-600 dark:text-purple-400 text-xl"></i>
+        <h1 class="font-bold text-lg tracking-tight bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent dark:from-purple-400 dark:to-pink-400">Circle Archive</h1>
+        <span class="text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full text-gray-500">Admin</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="themeToggle" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center transition-smooth hover:bg-gray-200 dark:hover:bg-gray-700">
+          <i class="fas fa-moon dark:hidden text-gray-600"></i>
+          <i class="fas fa-sun hidden dark:inline text-yellow-400"></i>
+        </button>
+        <button id="logoutBtn" class="flex items-center gap-1.5 bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition-smooth btn-action shadow-sm">
+          <i class="fas fa-sign-out-alt text-xs"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-5 py-8 max-w-6xl">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+      <div class="bg-white dark:bg-gray-900 rounded shadow-md p-5 flex items-center gap-4 border border-gray-100 dark:border-gray-800 transition-smooth card-hover">
+        <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+          <i class="fas fa-folder-open text-purple-600 dark:text-purple-400 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">Total Album</p>
+          <p id="totalAlbums" class="text-3xl font-extrabold tracking-tight">0</p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded shadow-md p-5 flex items-center gap-4 border border-gray-100 dark:border-gray-800 transition-smooth card-hover">
+        <div class="w-12 h-12 rounded-full bg-pink-100 dark:bg-pink-900/50 flex items-center justify-center">
+          <i class="fas fa-images text-pink-600 dark:text-pink-400 text-xl"></i>
+        </div>
+        <div>
+          <p class="text-gray-500 dark:text-gray-400 text-sm">Total Gambar</p>
+          <p id="totalImages" class="text-3xl font-extrabold tracking-tight">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-900 rounded shadow-md p-5 mb-8 border border-gray-100 dark:border-gray-800">
+      <h2 class="font-bold text-lg mb-4 flex items-center gap-2"><i class="fas fa-plus-circle text-green-600"></i> Tambah Album Baru</h2>
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input type="text" id="albumTitle" placeholder="Judul album..." class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition">
+        <button id="addAlbumBtn" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2.5 rounded font-semibold flex items-center justify-center gap-2 transition-smooth btn-action shadow-sm">
+          <i class="fas fa-save text-sm"></i> Simpan
+        </button>
+      </div>
+    </div>
+
+    <div id="albumsContainer" class="space-y-6"></div>
+  </main>
+
+  <div id="albumModal" class="fixed inset-0 z-30 hidden items-center justify-center p-4 modal-backdrop transition-all duration-300" style="display: none;">
+    <div class="bg-white dark:bg-gray-900 rounded-lg shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-gray-200 dark:border-gray-800 transform transition-all scale-95 opacity-0" id="modalContent">
+      <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+        <h3 id="modalAlbumTitle" class="font-bold text-xl flex items-center gap-2"><i class="fas fa-folder-open text-purple-500"></i> <span></span></h3>
+        <button id="closeModalBtn" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-xl">&times;</button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-5">
+        <div class="mb-5">
+          <label class="block text-sm font-semibold mb-2">Tambah Gambar Baru (URL)</label>
+          <div class="flex flex-col sm:flex-row gap-3">
+            <input type="text" id="modalImageUrl" placeholder="https://example.com/image.jpg" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-gray-50 dark:bg-gray-800 focus:ring-1 focus:ring-purple-500 outline-none text-sm">
+            <button id="modalAddImageBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition-smooth btn-action">
+              <i class="fas fa-plus-circle"></i> Tambah
+            </button>
+          </div>
+          <div id="modalPreview" class="mt-2 hidden"><img class="h-16 rounded shadow-sm border border-gray-300 dark:border-gray-600"></div>
+        </div>
+        <div class="border-t border-gray-200 dark:border-gray-800 pt-4">
+          <p class="text-sm text-gray-500 mb-3">Daftar Gambar</p>
+          <div id="modalGalleryGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let albums = [];
+    let currentModalAlbum = null;
+
+    const themeToggle = document.getElementById('themeToggle');
+    if (localStorage.theme === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+      localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    });
+
+    async function fetchAlbums() {
+      try {
+        const res = await fetch('/api/admin/albums');
+        if (res.status === 401) {
+          window.location.href = '/login';
+          return;
+        }
+        const data = await res.json();
+        if (data.success) {
+          albums = data.data;
+          updateStats();
+          renderAlbums();
+        } else {
+          Swal.fire('Error', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', 'Gagal memuat data', 'error');
+      }
+    }
+
+    function updateStats() {
+      const totalAlbums = albums.length;
+      const totalImages = albums.reduce((sum, a) => sum + (a.images?.length || 0), 0);
+      document.getElementById('totalAlbums').innerText = totalAlbums;
+      document.getElementById('totalImages').innerText = totalImages;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    function renderAlbums() {
+      const container = document.getElementById('albumsContainer');
+      if (albums.length === 0) {
+        container.innerHTML = `<div class="text-center py-12 bg-white dark:bg-gray-900 rounded shadow border border-gray-100 dark:border-gray-800">
+          <i class="fas fa-folder-open text-5xl text-gray-400 mb-3"></i>
+          <p class="text-gray-500">Belum ada album. Buat album pertama!</p>
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = albums.map(album => `
+        <div class="bg-white dark:bg-gray-900 rounded shadow overflow-hidden border border-gray-100 dark:border-gray-800 transition-smooth">
+          <div class="px-5 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-2 cursor-pointer hover:text-purple-600 dark:hover:text-purple-400 transition" data-album-id="${album._id}" onclick="openAlbumModal('${album._id}')">
+              <i class="fas fa-folder text-purple-500"></i>
+              <h3 class="font-bold text-lg">${escapeHtml(album.title)}</h3>
+              <span class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">${album.images?.length || 0} gambar</span>
+              <i class="fas fa-external-link-alt text-xs text-gray-400 ml-1"></i>
+            </div>
+            <button class="delete-album bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded flex items-center gap-1 transition-smooth btn-action" data-id="${album._id}">
+              <i class="fas fa-trash-alt text-xs"></i> Hapus Album
+            </button>
+          </div>
+          <div class="p-5">
+            <div class="mb-5 p-3 bg-gray-50 dark:bg-gray-800/30 rounded border border-gray-200 dark:border-gray-700">
+              <div class="flex flex-col sm:flex-row gap-3">
+                <input type="text" id="url-${album._id}" placeholder="Masukkan URL gambar (jpg, png, webp)" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-sm focus:ring-1 focus:ring-purple-500 outline-none">
+                <button class="add-image bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition-smooth btn-action" data-id="${album._id}">
+                  <i class="fas fa-plus-circle"></i> Tambah
+                </button>
+              </div>
+              <div id="preview-${album._id}" class="mt-2 hidden"><img class="h-16 rounded shadow-sm border border-gray-300 dark:border-gray-600"></div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              ${(album.images || []).map(img => `
+                <div class="relative group">
+                  <img src="${img.url}" class="w-full h-32 object-cover rounded shadow-sm border border-gray-200 dark:border-gray-700" onerror="this.src='https://placehold.co/400x300?text=Broken'">
+                  <button class="delete-image absolute top-1 right-1 bg-red-600 rounded-full w-6 h-6 text-white text-xs hidden group-hover:flex items-center justify-center transition-smooth" data-album="${album._id}" data-image="${img._id}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                </div>
+              `).join('')}
+              ${(!album.images || album.images.length === 0) ? '<p class="col-span-full text-center text-gray-400 text-sm py-6">Belum ada gambar. Tambahkan URL di atas.</p>' : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.delete-album').forEach(btn => {
+        btn.addEventListener('click', () => deleteAlbum(btn.dataset.id));
+      });
+      document.querySelectorAll('.add-image').forEach(btn => {
+        btn.addEventListener('click', () => addImage(btn.dataset.id));
+      });
+      document.querySelectorAll('.delete-image').forEach(btn => {
+        btn.addEventListener('click', () => deleteImage(btn.dataset.album, btn.dataset.image));
+      });
+
+      albums.forEach(album => {
+        const input = document.getElementById(`url-${album._id}`);
+        if (input) {
+          input.addEventListener('input', (e) => {
+            const previewDiv = document.getElementById(`preview-${album._id}`);
+            const url = e.target.value.trim();
+            if (url && (url.startsWith('http') || url.startsWith('https'))) {
+              previewDiv.querySelector('img').src = url;
+              previewDiv.classList.remove('hidden');
+            } else {
+              previewDiv.classList.add('hidden');
+            }
+          });
+        }
+      });
+    }
+
+    async function addImage(albumId) {
+      const input = document.getElementById(`url-${albumId}`);
+      const imageUrl = input.value.trim();
+      if (!imageUrl) {
+        Swal.fire('Peringatan', 'URL gambar tidak boleh kosong', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/add-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, imageUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Berhasil', 'Gambar ditambahkan', 'success');
+          input.value = '';
+          document.getElementById(`preview-${albumId}`).classList.add('hidden');
+          fetchAlbums();
+          if (currentModalAlbum && currentModalAlbum._id === albumId) {
+            openAlbumModal(albumId);
+          }
+        } else {
+          Swal.fire('Gagal', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+
+    async function deleteAlbum(albumId) {
+      const confirm = await Swal.fire({
+        title: 'Hapus album?',
+        text: 'Semua gambar dalam album akan ikut terhapus secara permanen.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Ya, hapus!'
+      });
+      if (!confirm.isConfirmed) return;
+      try {
+        const res = await fetch(`/api/admin/delete-album/${albumId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Terhapus!', data.message, 'success');
+          if (currentModalAlbum && currentModalAlbum._id === albumId) closeModal();
+          fetchAlbums();
+        } else {
+          Swal.fire('Gagal', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+
+    async function deleteImage(albumId, imageId) {
+      const confirm = await Swal.fire({
+        title: 'Hapus gambar ini?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, hapus',
+        cancelButtonText: 'Batal'
+      });
+      if (!confirm.isConfirmed) return;
+      try {
+        const res = await fetch('/api/admin/delete-image', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId, imageId })
+        });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Terhapus!', 'Gambar berhasil dihapus', 'success');
+          fetchAlbums();
+          if (currentModalAlbum && currentModalAlbum._id === albumId) {
+            openAlbumModal(albumId);
+          }
+        } else {
+          Swal.fire('Gagal', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+
+    document.getElementById('addAlbumBtn').addEventListener('click', async () => {
+      const title = document.getElementById('albumTitle').value.trim();
+      if (!title) {
+        Swal.fire('Error', 'Judul album tidak boleh kosong', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/add-album', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title })
+        });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Berhasil', 'Album baru ditambahkan', 'success');
+          document.getElementById('albumTitle').value = '';
+          fetchAlbums();
+        } else {
+          Swal.fire('Gagal', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/logout', { method: 'POST' });
+      window.location.href = '/login';
+    });
+
+    const modal = document.getElementById('albumModal');
+    const modalContent = document.getElementById('modalContent');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const modalTitleSpan = document.querySelector('#modalAlbumTitle span');
+    const modalGalleryGrid = document.getElementById('modalGalleryGrid');
+    const modalImageUrl = document.getElementById('modalImageUrl');
+    const modalAddImageBtn = document.getElementById('modalAddImageBtn');
+    const modalPreview = document.getElementById('modalPreview');
+
+    function openAlbumModal(albumId) {
+      const album = albums.find(a => a._id === albumId);
+      if (!album) return;
+      currentModalAlbum = album;
+      modalTitleSpan.innerText = album.title;
+      renderModalGallery(album.images || []);
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.classList.add('flex');
+        modalContent.classList.remove('scale-95', 'opacity-0');
+        modalContent.classList.add('scale-100', 'opacity-100');
+      }, 10);
+      document.body.style.overflow = 'hidden';
+      
+      modalImageUrl.value = '';
+      modalPreview.classList.add('hidden');
+      
+      modalImageUrl.oninput = () => {
+        const url = modalImageUrl.value.trim();
+        if (url && (url.startsWith('http') || url.startsWith('https'))) {
+          modalPreview.querySelector('img').src = url;
+          modalPreview.classList.remove('hidden');
+        } else {
+          modalPreview.classList.add('hidden');
+        }
+      };
+    }
+
+    function renderModalGallery(images) {
+      if (!images.length) {
+        modalGalleryGrid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-8">Belum ada gambar</div>';
+        return;
+      }
+      modalGalleryGrid.innerHTML = images.map(img => `
+        <div class="relative group">
+          <img src="${img.url}" class="w-full aspect-square object-cover rounded shadow-sm border border-gray-200 dark:border-gray-700" onerror="this.src='https://placehold.co/400x400?text=Broken'">
+          <button class="delete-image-modal absolute top-1 right-1 bg-red-600 rounded-full w-6 h-6 text-white text-xs hidden group-hover:flex items-center justify-center transition-smooth" data-image-id="${img._id}">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      `).join('');
+      
+      document.querySelectorAll('.delete-image-modal').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const imageId = btn.dataset.imageId;
+          await deleteImage(currentModalAlbum._id, imageId);
+        });
+      });
+    }
+
+    async function addImageFromModal() {
+      if (!currentModalAlbum) return;
+      const imageUrl = modalImageUrl.value.trim();
+      if (!imageUrl) {
+        Swal.fire('Peringatan', 'URL gambar tidak boleh kosong', 'warning');
+        return;
+      }
+      try {
+        const res = await fetch('/api/admin/add-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ albumId: currentModalAlbum._id, imageUrl })
+        });
+        const data = await res.json();
+        if (data.success) {
+          Swal.fire('Berhasil', 'Gambar ditambahkan', 'success');
+          modalImageUrl.value = '';
+          modalPreview.classList.add('hidden');
+          await fetchAlbums();
+          const updatedAlbum = albums.find(a => a._id === currentModalAlbum._id);
+          if (updatedAlbum) {
+            currentModalAlbum = updatedAlbum;
+            renderModalGallery(currentModalAlbum.images || []);
+          }
+        } else {
+          Swal.fire('Gagal', data.message, 'error');
+        }
+      } catch (err) {
+        Swal.fire('Error', err.message, 'error');
+      }
+    }
+
+    function closeModal() {
+      modalContent.classList.remove('scale-100', 'opacity-100');
+      modalContent.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+        currentModalAlbum = null;
+      }, 200);
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
+    modalAddImageBtn.addEventListener('click', addImageFromModal);
+
+    window.openAlbumModal = openAlbumModal;
+
+    fetchAlbums();
+  </script>
+</body>
+</html>
