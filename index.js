@@ -72,11 +72,11 @@ const Admin = mongoose.model('Admin', AdminSchema);
 const Gallery = mongoose.model('Gallery', GallerySchema);
 
 async function autoCreateAdmin() {
-  const adminExists = await Admin.findOne({ username: 'admin' });
+  const adminExists = await Admin.findOne({ username: 'kila' });
   if (!adminExists) {
-    const hashedPass = await bcrypt.hash('admin123', 10);
-    await Admin.create({ username: 'admin', password: hashedPass });
-    console.log('✅ Admin default dibuat: username=admin, password=admin123');
+    const hashedPass = await bcrypt.hash('imut', 10);
+    await Admin.create({ username: 'kila', password: hashedPass });
+    console.log('✅ Admin default dibuat: username=kila, password=imut');
   }
 }
 
