@@ -10,7 +10,7 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const MONGODB_URI = 'mongodb+srv://gallery:gallery@cluster0.9zkt0hl.mongodb.net/gallery?retryWrites=true&w=majority&appName=Cluster0';
+const MONGODB_URI = 'mongodb+srv://azamnaqib28_db_user:azamnaqib28_db_user@cluster0.inqifab.mongodb.net/?appName=Cluster0';
 const SESSION_SECRET = 'super_secret_key_change_this_in_production';
 
 app.set('trust proxy', 1);
